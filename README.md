@@ -31,8 +31,8 @@ It demonstrates how machine learning models are integrated into real business sy
 
 This project focuses on ML systems engineering, not only model accuracy.
 
-🧠 High-Level Architecture
-C:\Users\mgasp\Downloads\ai_review_automation_architecture.png
+🧠 Workflow Architecture
+![AI Review Automation Architecture](image/ai_review_automation_architecture.png)
 
 
 🏗 System Components
