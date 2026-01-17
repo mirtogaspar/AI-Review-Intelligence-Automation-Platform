@@ -1,0 +1,179 @@
+{
+  "name": "Workflow B",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "chat",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "name": "Webhook - Chat Interface",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "d62a6cce-333a-47ea-ad03-9c539613ca07",
+      "webhookId": "2bd430b9-77b5-45ee-9f5a-2c3b2838438d"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://127.0.0.1:5000/query",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"question\": \"={{ $json.body.question }}\"\n}\n\n",
+        "options": {}
+      },
+      "name": "Query ML Results",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [
+        256,
+        16
+      ],
+      "id": "4ff66885-898b-4c00-8cf9-154d57c428b6"
+    },
+    {
+      "parameters": {
+        "resource": "chat",
+        "model": "chatgpt-4o-latest",
+        "prompt": {
+          "messages": [
+            {
+              "role": "system",
+              "content": "You are a helpful assistant answering questions about ML review results."
+            },
+            {
+              "content": "=={{ \"Here is the ML data:\\n\" + JSON.stringify($json) }}"
+            }
+          ]
+        },
+        "options": {
+          "temperature": 0.7
+        },
+        "requestOptions": {}
+      },
+      "name": "OpenAI - Enhanced Response",
+      "type": "n8n-nodes-base.openAi",
+      "typeVersion": 1,
+      "position": [
+        592,
+        16
+      ],
+      "id": "2b189e25-139f-450c-8cf1-54247e9b9055",
+      "credentials": {
+        "openAiApi": {
+          "id": "yourID",
+          "name": "OpenAi account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "=🤖 Got it! Analyzing reviews… I’ll reply shortly.\n",
+        "options": {}
+      },
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        256,
+        304
+      ],
+      "id": "bf151b08-c2a9-44fa-8f54-a0a361343a39"
+    },
+    {
+      "parameters": {
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "#tous-automations",
+          "mode": "name"
+        },
+        "text": "=🤖 *AI Review Assistant*\n\n{{ $json.message.content }}",
+        "otherOptions": {}
+      },
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.4,
+      "position": [
+        880,
+        208
+      ],
+      "id": "yourID",
+      "name": "Send a message",
+      "webhookId": "f0bee4a8-b6a4-4d94-8450-f409054da6cc",
+      "credentials": {
+        "slackApi": {
+          "id": "yourID",
+          "name": "Slack account 2"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook - Chat Interface": {
+      "main": [
+        [
+          {
+            "node": "Query ML Results",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Query ML Results": {
+      "main": [
+        [
+          {
+            "node": "OpenAI - Enhanced Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI - Enhanced Response": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Respond to Webhook": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "",
+  "meta": {
+    "instanceId": "yourID"
+  },
+  "id": "yourID",
+  "tags": []
+}

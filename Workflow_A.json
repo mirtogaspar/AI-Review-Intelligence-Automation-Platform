@@ -1,0 +1,318 @@
+{
+  "name": "My workflow",
+  "nodes": [
+    {
+      "parameters": {},
+      "name": "When clicking 'Test workflow'",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "yourID"
+    },
+    {
+      "parameters": {
+        "sheetId": "yourSheetID",
+        "range": "Input Reviews!A:E",
+        "options": {}
+      },
+      "name": "Google Sheets - New Reviews",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 2,
+      "position": [
+        256,
+        0
+      ],
+      "id": "yourID",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "yourID",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "review-webhook",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "name": "Webhook - Receive Reviews",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        256,
+        208
+      ],
+      "id": "yourID",
+      "webhookId": "a58a7ff3-a682-4d2b-a3f8-644ad022e78a"
+    },
+    {
+      "parameters": {
+        "functionCode": "// Prepare reviews for batch processing\nconst reviews = [];\n\nfor (const item of items) {\n  reviews.push({\n    review_text: item.json.review_text || item.json.text,\n    verified_purchase: item.json.verified_purchase || 1,\n    helpful_votes: item.json.helpful_votes || 0,\n    review_id: item.json.id || `review_${Date.now()}_${reviews.length}`\n  });\n}\n\nreturn [\n  {\n    json: {\n      reviews: reviews,\n      batch_id: `batch_${Date.now()}`,\n      total_count: reviews.length\n    }\n  }\n];"
+      },
+      "name": "Prepare Batch",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        480,
+        0
+      ],
+      "id": "yourID"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://127.0.0.1:5000/batch_predict",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{$json }}",
+        "options": {}
+      },
+      "name": "ML API - Batch Predict",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [
+        704,
+        0
+      ],
+      "id": "yourID"
+    },
+    {
+      "parameters": {
+        "functionCode": "// Store results with metadata\nconst results = $input.item.json.results;\nconst summary = $input.item.json.summary;\n\nconst output = [];\n\nfor (const result of results) {\n  output.push({\n    json: {\n      ...result,\n      batch_id: $('Prepare Batch').item.json.batch_id,\n      analyzed_at: new Date().toISOString(),\n      needs_attention: result.confidence < 0.7,\n      summary: summary\n    }\n  });\n}\n\nreturn output;"
+      },
+      "name": "Process Results",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        928,
+        0
+      ],
+      "id": "yourID"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "sheetId": "yourSheetID",
+        "range": "Results!A:H",
+        "options": {}
+      },
+      "name": "Google Sheets - Store Results",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 2,
+      "position": [
+        1136,
+        0
+      ],
+      "id": "yourID",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "yourID",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "number": [
+            {
+              "value1": "={{ $json.confidence }}",
+              "value2": 0.7
+            }
+          ]
+        }
+      },
+      "name": "IF Low Confidence",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        1136,
+        192
+      ],
+      "id": "yourID"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://127.0.0.1:5000/analyze",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{$json }}",
+        "options": {}
+      },
+      "name": "Get Detailed Explanation",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [
+        1456,
+        176
+      ],
+      "id": "yourID"
+    },
+    {
+      "parameters": {
+        "channel": "tous-automations",
+        "text": "=⚠️ Low Confidence Alert\n\nReview: {{ $json.review_text }}\nPrediction: {{ $json.sentiment }}\nConfidence: {{ ($json.confidence * 100).toFixed(1) }}%\n\nThis review needs manual review.",
+        "otherOptions": {},
+        "attachments": []
+      },
+      "name": "Slack - Alert",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 1,
+      "position": [
+        1696,
+        176
+      ],
+      "id": "yourID",
+      "credentials": {
+        "slackApi": {
+          "id": "yourID",
+          "name": "Slack account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "C0A7Z5NH9GE",
+          "mode": "id"
+        },
+        "text": "=📊 Batch Analysis Complete!\n\n✅ Total Reviews: {{ $('Prepare Batch').item.json.total_count }}\n📈 Positive: {{ $json.summary.positive }}\n📉 Negative: {{ $json.summary.negative }}\n➖ Neutral: {{ $json.summary.neutral }}\n🎯 Avg Confidence: {{ ($json.summary.avg_confidence * 100).toFixed(1) }}%\n\nBatch ID: {{ $('Prepare Batch').item.json.batch_id }}",
+        "otherOptions": {}
+      },
+      "name": "Slack - Summary Report",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2,
+      "position": [
+        1360,
+        0
+      ],
+      "id": "yourID",
+      "webhookId": "54d681e9-e919-45d6-84ec-bb67777a2d27",
+      "credentials": {
+        "slackApi": {
+          "id": "yourID",
+          "name": "Slack account 2"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking 'Test workflow'": {
+      "main": [
+        [
+          {
+            "node": "Google Sheets - New Reviews",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Sheets - New Reviews": {
+      "main": [
+        [
+          {
+            "node": "Prepare Batch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook - Receive Reviews": {
+      "main": [
+        [
+          {
+            "node": "Prepare Batch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Batch": {
+      "main": [
+        [
+          {
+            "node": "ML API - Batch Predict",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ML API - Batch Predict": {
+      "main": [
+        [
+          {
+            "node": "Process Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Process Results": {
+      "main": [
+        [
+          {
+            "node": "Google Sheets - Store Results",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "IF Low Confidence",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Slack - Summary Report",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF Low Confidence": {
+      "main": [
+        [
+          {
+            "node": "Get Detailed Explanation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Detailed Explanation": {
+      "main": [
+        [
+          {
+            "node": "Slack - Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "",
+  "meta": {
+    "instanceId": "yourID"
+  },
+  "id": "yourID",
+  "tags": []
+}
