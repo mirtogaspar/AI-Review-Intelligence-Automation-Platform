@@ -32,47 +32,8 @@ It demonstrates how machine learning models are integrated into real business sy
 This project focuses on ML systems engineering, not only model accuracy.
 
 🧠 High-Level Architecture
-┌────────────────────┐
-│        Slack        │
-│  (User Interface)   │
-└─────────┬──────────┘
-          │
-          │  Slash Command / Question
-          ▼
-┌────────────────────┐
-│        ngrok        │
-│  Public HTTPS Tunnel│
-└─────────┬──────────┘
-          │
-          ▼
-┌────────────────────┐
-│         n8n         │
-│ Workflow Orchestr.  │
-│                     │
-│ - Webhooks          │
-│ - Routing logic     │
-│ - Async execution   │
-└─────────┬──────────┘
-          │
-          ▼
-┌────────────────────┐
-│     ML API (Flask)  │
-│  Sentiment Analysis │
-│  Aggregations       │
-└─────────┬──────────┘
-          │
-          ▼
-┌────────────────────┐
-│       OpenAI        │
-│ Natural Language AI │
-│ Explanation Layer   │
-└─────────┬──────────┘
-          │
-          ▼
-┌────────────────────┐
-│        Slack        │
-│  AI-generated reply │
-└────────────────────┘
+C:\Users\mgasp\Downloads\ai_review_automation_architecture.png
+
 
 🏗 System Components
 1️⃣ Python ML Inference API
