@@ -178,21 +178,28 @@ Slack message to user
 | Tunneling     | ngrok                               |
 | Deployment    | Local (cloud-ready)                 |
 
-📂 Repository Structure
-ai-review-automation/
-│
-├── image/
-│   └── ai_review_automation_architecture.png
-│
-├── workflows/
-│   ├── batch-analysis.json
-│   └── chat-interface.json
-│
-├── ml_api.py
-├── requirements.txt
-├── README.md
-└── .env.example
 
+
+⭐ Final Note
+
+This project demonstrates how machine learning systems operate beyond notebooks, integrating models into automation pipelines, APIs, and real user interfaces.
+
+It bridges the gap between:
+
+“I trained a model”
+and
+“I built an AI system.”
+
+👤 Author
+
+Myrto Gasparinatou
+🎓 PhD Candidate in Machine Learning | AI Engineer
+
+GitHub: @mirtogaspar
+
+LinkedIn: linkedin.com/in/mirto-m-gasparinatou
+
+Email: mgasparinatou@gmail.com
 
 
 
