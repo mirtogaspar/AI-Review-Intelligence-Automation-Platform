@@ -1,240 +1,264 @@
-🤖 AI Review Intelligence Automation Platform
+🤖 AI Review Automation System
+End-to-End ML Orchestration with n8n, Slack & OpenAI
 
-n8n · Python ML API · OpenAI · Slack
+Continuation of:
+🔗 Multimodal Product Review Analyzer
+(ML training, modeling & inference pipeline)
 
-This project extends the Multi-Modal Product Review Analyzer into a production-style AI automation system.
+This project extends a trained machine learning sentiment analysis system into a fully automated, production-style AI workflow.
 
-It demonstrates how machine learning models can be operationalized using workflow orchestration, APIs, and conversational interfaces — transforming static ML models into interactive decision-support systems.
+The system connects:
 
-🚀 Project Overview
+a Python ML inference API
 
-This repository focuses on ML deployment, orchestration, and AI system design.
+n8n as the orchestration engine
 
-While the previous project trained and evaluated the sentiment model, this project shows:
+OpenAI for natural language explanations
 
-how predictions are consumed by downstream systems
+Slack as the user interface
 
-how users interact with ML results via chat
+It demonstrates how machine learning models are integrated into real business systems, not just trained offline.
 
-how automation replaces manual analysis
+🚀 What This Project Demonstrates
 
-how AI explanations are layered on top of ML outputs
+✅ ML model deployment via REST API
+✅ Workflow orchestration (event-driven automation)
+✅ Conversational AI interface
+✅ Asynchronous processing
+✅ Real-time Slack integration
+✅ Clean system architecture
+✅ Production-style separation of concerns
 
-This is a real-world ML engineering continuation, not a toy demo.
+This project focuses on ML systems engineering, not only model accuracy.
 
-🧠 What This System Does
+🧠 High-Level Architecture
+┌────────────────────┐
+│        Slack        │
+│  (User Interface)   │
+└─────────┬──────────┘
+          │
+          │  Slash Command / Question
+          ▼
+┌────────────────────┐
+│        ngrok        │
+│  Public HTTPS Tunnel│
+└─────────┬──────────┘
+          │
+          ▼
+┌────────────────────┐
+│         n8n         │
+│ Workflow Orchestr.  │
+│                     │
+│ - Webhooks          │
+│ - Routing logic     │
+│ - Async execution   │
+└─────────┬──────────┘
+          │
+          ▼
+┌────────────────────┐
+│     ML API (Flask)  │
+│  Sentiment Analysis │
+│  Aggregations       │
+└─────────┬──────────┘
+          │
+          ▼
+┌────────────────────┐
+│       OpenAI        │
+│ Natural Language AI │
+│ Explanation Layer   │
+└─────────┬──────────┘
+          │
+          ▼
+┌────────────────────┐
+│        Slack        │
+│  AI-generated reply │
+└────────────────────┘
 
-The platform enables:
+🏗 System Components
+1️⃣ Python ML Inference API
 
-✅ Automatic analysis of review batches
-✅ Centralized storage of ML predictions
-✅ Natural-language querying of ML results
-✅ Slack-based conversational AI interface
-✅ Human-readable explanations of model output
+Loads trained sentiment model
 
-🏗️ High-Level Architecture
-Google Sheets / Webhooks
-          |
-          v
-        n8n
-          |
-          v
-Python ML API (Flask)
-(sentiment inference)
-          |
-          v
-Results Store (in-memory / extensible)
-          |
-          v
-OpenAI (LLM explanations)
-          |
-          v
-Slack AI Assistant
+Accepts queries about review results
 
-🔧 Tech Stack
-Layer	Technology
-Orchestration	n8n (self-hosted)
-ML Inference	Python + Flask
-Model	Random Forest (multimodal)
-NLP	TF-IDF (text)
-LLM	OpenAI GPT
-Interface	Slack Slash Commands
-Tunneling	ngrok
-Data Source	Google Sheets / Webhooks
-🧩 Workflows Implemented
-🔹 Workflow A — Batch Review Analysis
+Computes aggregations (counts, examples, summaries)
 
-Purpose: ML Ops & Automation
+Returns structured JSON responses
 
-Steps:
-
-Receive reviews (Google Sheets or webhook)
-
-Send reviews to ML API (/batch_predict)
-
-Store sentiment predictions
-
-Generate statistics
-
-Send Slack alerts and summaries
-
-Demonstrates:
-
-ML pipeline automation
-
-API orchestration
-
-batch inference
-
-operational monitoring
-
-🔹 Workflow B — Conversational Q&A Interface
-
-Purpose: AI systems & human interaction
-
-User flow:
-
-/ask-reviews how many negative reviews are there?
+Runs locally.
 
 
-System flow:
+2️⃣ n8n — Automation & Orchestration Layer
 
-Slack
-   ↓
-n8n Webhook (/chat)
-   ↓
-ML API (/query)
-   ↓
-OpenAI (explanation)
-   ↓
-Slack response
+n8n acts as the central brain of the system.
+
+Responsibilities:
+
+Receives incoming webhooks
+
+Routes user questions
+
+Calls ML inference API
+
+Sends ML output to OpenAI
+
+Formats clean JSON responses
+
+Sends results back to Slack
+
+Two workflows exist:
+
+🔹 Workflow A — Batch Analysis
+
+Triggered by new review data
+
+Sends reviews to ML API
+
+Stores predictions
+
+Sends alerts & summaries to Slack
+
+🔹 Workflow B — Chat / Q&A Interface
+
+Receives natural language questions
+
+Queries ML results
+
+Uses GPT for explanation
+
+Returns structured responses
+
+3️⃣ OpenAI — Explanation Layer
+
+OpenAI is not used for prediction.
+
+It is used only to:
+
+Interpret ML output
+
+Convert statistics into human-readable explanations
+
+Provide conversational analytics
+
+This separation ensures:
+
+ML remains deterministic
+
+LLM remains explanatory
+
+4️⃣ Slack — User Interface
+
+Slack acts as the frontend.
+
+Users can ask questions such as:
+
+“How many negative reviews are there?”
+
+“What are the most common complaints?”
+
+“Give examples of bad reviews”
+
+Slack receives:
+
+Immediate acknowledgment
+
+Final AI-generated response after processing
+
+🌐 Public Webhook Access (ngrok)
+Why ngrok is required:
+
+Slack slash commands and interactive messages require a public HTTPS endpoint.
+
+During development, n8n runs locally so
+
+Slack cannot access localhost directly.
+
+To solve this, ngrok is used to expose the local n8n instance to the internet securely.
+
+How it works
+Slack → ngrok → n8n webhook → workflow execution
 
 
-Example response:
+ngrok generates a temporary public URL
 
-🤖 AI Review Assistant
-There are 2 negative reviews out of 10 total.
-
-Supported questions:
-
-How many negative reviews are there?
-
-How many positive reviews?
-
-What is the average confidence?
-
-Show examples of negative reviews
-
-🧪 Verified End-to-End Test
-
-The system was validated using direct API calls:
-
-curl -X POST http://localhost:5678/webhook-test/chat \
-  -H "Content-Type: application/json" \
-  -d '{"question":"How many negative reviews are there?"}'
+which forwards traffic to local url.
 
 
-Response:
+This URL is configured in the Slack App as the request URL for slash commands.
 
+
+🔄 End-to-End Flow (Chat Workflow)
+1. User asks question in Slack
+2. Slack sends request to n8n webhook (via ngrok)
+3. n8n immediately responds: “Analyzing…”
+4. n8n calls ML API (/query)
+5. ML API returns structured results
+6. n8n sends data to OpenAI
+7. OpenAI generates explanation
+8. n8n sends final message back to Slack
+
+
+This design supports asynchronous execution, avoiding Slack timeouts.
+
+🧪 Example API Response
 {
-  "answer": "Based on the provided ML data...",
-  "data": {
-    "answer": "There are 0 negative reviews out of 2 total.",
-    "count": 0,
-    "examples": []
-  },
-  "timestamp": "2026-01-16T09:41:29.029Z"
+  "answer": "There are 12 negative reviews out of 50 total.",
+  "count": 12,
+  "examples": [
+    "Battery stopped working after two days",
+    "Very poor build quality"
+  ],
+  "timestamp": "2026-01-16T09:41:29Z"
 }
 
-
-✅ Webhook routing works
-✅ ML API responds correctly
-✅ LLM explanation layer works
-✅ JSON contract is stable
-✅ End-to-end system validated
-
-🧠 Key Engineering Concepts Demonstrated
-
-This project showcases real-world ML engineering skills:
-
-✅ ML → Product Transition
-
-Turning trained models into usable systems.
-
-✅ Model Serving
-
-Deploying ML inference through REST APIs.
-
-✅ Orchestration Layer
-
-Using n8n as an integration backbone.
-
-✅ Asynchronous Systems
-
-Instant Slack responses + delayed processing.
-
-✅ Conversational Analytics
-
-Querying ML results with natural language.
-
-✅ Separation of Concerns
-
-ML model = prediction
-
-LLM = explanation
-
-n8n = orchestration
-
-Slack = interface
-
-🧩 Repository Structure
+📁 Repository Structure
 ai-review-automation/
-├── workflows/
-│   ├── batch_analysis_workflow.json
-│   └── chat_interface_workflow.json
-│
-├── ml_api/
-│   └── ml_api.py
-│
+├── README.md
+├── n8n-workflows/
+│   ├── batch-analysis.json
+│   └── chat-interface.json
 ├── diagrams/
 │   └── architecture.png
-│
-├── README.md
-└── .gitignore
+├── screenshots/
+│   └── slack-demo.png
 
-🔗 Related Repository
+🎯 Key Engineering Concepts Demonstrated
 
-This project builds directly on:
+Event-driven architecture
 
-👉 Multi-Modal Product Review Analyzer
-https://github.com/mirtogaspar/multimodal-review-analyzer
+ML model serving
 
-That repository focuses on:
+Workflow orchestration
 
-ML training
+API-based system integration
 
-data leakage prevention
+LLM-as-explainer pattern
 
-realistic evaluation
+Async webhook design
 
-feature engineering
+Real-world ML deployment practices
 
-This repository focuses on:
+🔮 Future Improvements
 
-deployment
+Dockerized deployment
 
-orchestration
+Cloud-hosted n8n
 
-automation
+Scheduled automated reports
 
-AI interaction
+Role-based Slack commands
+
+Multi-product review support
+
+Monitoring & logging dashboards
+
 👤 Author
 
 Myrto Gasparinatou
 🎓 PhD Candidate in Machine Learning | AI Engineer
 
-GitHub: https://github.com/mirtogaspar
+GitHub: @mirtogaspar
 
-LinkedIn: https://linkedin.com/in/mirto-m-gasparinatou
+LinkedIn: linkedin.com/in/mirto-m-gasparinatou
 
 Email: mgasparinatou@gmail.com
